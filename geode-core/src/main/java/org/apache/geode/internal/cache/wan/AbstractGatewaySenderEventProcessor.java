@@ -31,25 +31,12 @@ import org.apache.logging.log4j.Logger;
 import org.apache.geode.CancelException;
 import org.apache.geode.GemFireException;
 import org.apache.geode.SystemFailure;
-import org.apache.geode.cache.CacheException;
-import org.apache.geode.cache.EntryEvent;
-import org.apache.geode.cache.Operation;
-import org.apache.geode.cache.Region;
-import org.apache.geode.cache.RegionDestroyedException;
+import org.apache.geode.cache.*;
 import org.apache.geode.cache.wan.GatewayEventFilter;
 import org.apache.geode.cache.wan.GatewayQueueEvent;
 import org.apache.geode.cache.wan.GatewaySender;
 import org.apache.geode.distributed.internal.DistributionConfig;
-import org.apache.geode.internal.cache.BucketRegion;
-import org.apache.geode.internal.cache.Conflatable;
-import org.apache.geode.internal.cache.DistributedRegion;
-import org.apache.geode.internal.cache.EntryEventImpl;
-import org.apache.geode.internal.cache.EnumListenerEvent;
-import org.apache.geode.internal.cache.EventID;
-import org.apache.geode.internal.cache.InternalCache;
-import org.apache.geode.internal.cache.LocalRegion;
-import org.apache.geode.internal.cache.PartitionedRegion;
-import org.apache.geode.internal.cache.RegionQueue;
+import org.apache.geode.internal.cache.*;
 import org.apache.geode.internal.cache.wan.parallel.ConcurrentParallelGatewaySenderQueue;
 import org.apache.geode.internal.cache.wan.parallel.ParallelGatewaySenderQueue;
 import org.apache.geode.internal.cache.wan.serial.SerialGatewaySenderQueue;
@@ -268,6 +255,51 @@ public abstract class AbstractGatewaySenderEventProcessor extends Thread {
       return ((ConcurrentParallelGatewaySenderQueue) queue).localSize();
     }
     return this.queue.size();
+  }
+
+  public int eventSecondaryQueueSize() {
+    if (queue == null) {
+      return 0;
+    }
+
+    // if parallel, get both primary and secondary queues' size, then substract primary queue's size
+    if (this.queue instanceof ConcurrentParallelGatewaySenderQueue) {
+      int size = ((ConcurrentParallelGatewaySenderQueue) queue).localSize(true)
+          - ((ConcurrentParallelGatewaySenderQueue) queue).localSize(false);
+      return size;
+    }
+    return this.queue.size();
+  }
+
+  public void registerEventDroppedInPrimaryQueue(EntryEventImpl event) {
+    if (queue == null) {
+      return;
+    }
+    if (this.queue instanceof ConcurrentParallelGatewaySenderQueue) {
+      ConcurrentParallelGatewaySenderQueue cpgsq = (ConcurrentParallelGatewaySenderQueue) queue;
+      PartitionedRegion prQ = cpgsq.getRegion(event.getRegion().getFullPath());
+      if (prQ == null) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("shadow partitioned region " + event.getRegion().getFullPath()
+              + " is not created yet.");
+        }
+        return;
+      }
+      int bucketId = PartitionedRegionHelper.getHashKey((EntryOperation) event);
+      long shadowKey = event.getTailKey();
+
+      ParallelGatewaySenderQueue pgsq =
+          (ParallelGatewaySenderQueue) cpgsq.getQueueByBucket(bucketId);
+      boolean isPrimary = prQ.getRegionAdvisor().getBucketAdvisor(bucketId).isPrimary();
+      if (isPrimary) {
+        pgsq.addRemovedEvent(prQ, bucketId, shadowKey);
+        this.sender.getStatistics().incEventsNotQueuedAtYetRunningPrimarySender();
+        if (logger.isDebugEnabled()) {
+          logger.debug("register dropped event for primary queue. BucketId is " + bucketId
+              + ", shadowKey is " + shadowKey + ", prQ is " + prQ.getFullPath());
+        }
+      }
+    }
   }
 
   /**

@@ -476,6 +476,16 @@ public class PartitionedRegion extends LocalRegion
     colocationListeners.remove(colocationListener);
   }
 
+  @Override
+  protected boolean validateProfiles() throws IncompatibleCacheServiceProfileException {
+    try {
+      new CreateRegionProcessor((PartitionedRegion) this).initializeRegion();
+      return true;
+    } catch (Exception e) {
+      throw new IncompatibleCacheServiceProfileException(e.getMessage());
+    }
+    // new UpdateAttributesProcessor((PartitionedRegion) this).validateProfiles()
+  }
 
   static PRIdMap getPrIdToPR() {
     return prIdToPR;

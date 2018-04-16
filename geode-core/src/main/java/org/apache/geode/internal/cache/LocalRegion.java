@@ -146,7 +146,6 @@ import org.apache.geode.cache.util.ObjectSizer;
 import org.apache.geode.cache.wan.GatewaySender;
 import org.apache.geode.distributed.DistributedMember;
 import org.apache.geode.distributed.internal.DistributionAdvisor;
-import org.apache.geode.distributed.internal.DistributionAdvisor.Profile;
 import org.apache.geode.distributed.internal.DistributionConfig;
 import org.apache.geode.distributed.internal.DistributionManager;
 import org.apache.geode.distributed.internal.DistributionStats;
@@ -709,7 +708,7 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
       return new Object();
     } else {
       return this.fullPath; // avoids creating another sync object - could be anything unique to
-                            // this region
+      // this region
     }
   }
 
@@ -883,8 +882,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
 
     LocalRegion newRegion = null;
     try {
-      if (getDestroyLock)
+      if (getDestroyLock) {
         acquireDestroyLock();
+      }
       LocalRegion existing = null;
       try {
         if (isDestroyed()) {
@@ -1063,7 +1063,7 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
         false, // ifOld
         null, // expectedOldValue
         true // requireOldValue TODO txMerge why is oldValue required for
-             // create? I think so that the EntryExistsException will have it.
+    // create? I think so that the EntryExistsException will have it.
     )) {
       throw new EntryExistsException(event.getKey().toString(), event.getOldValue());
     } else {
@@ -1635,8 +1635,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
       eventReturned = true;
       return event;
     } finally {
-      if (!eventReturned)
+      if (!eventReturned) {
         event.release();
+      }
     }
   }
 
@@ -2518,8 +2519,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
   }
 
   private static void releaseLatch(StoppableCountDownLatch latch) {
-    if (latch == null)
+    if (latch == null) {
       return;
+    }
     latch.countDown();
   }
 
@@ -3123,10 +3125,11 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
 
     // check validity of key against keyConstraint
     if (this.keyConstraint != null) {
-      if (!this.keyConstraint.isInstance(key))
+      if (!this.keyConstraint.isInstance(key)) {
         throw new ClassCastException(
             LocalizedStrings.LocalRegion_KEY_0_DOES_NOT_SATISFY_KEYCONSTRAINT_1
                 .toLocalizedString(key.getClass().getName(), this.keyConstraint.getName()));
+      }
     }
 
     // We don't need to check that the key is Serializable. Instead,
@@ -3145,7 +3148,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    */
   private final AtomicInteger tombstoneCount = new AtomicInteger();
 
-  /** a boolean for issuing a client/server configuration mismatch message */
+  /**
+   * a boolean for issuing a client/server configuration mismatch message
+   */
   private boolean concurrencyMessageIssued;
 
   /**
@@ -3199,7 +3204,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     return this.cachePerfStats;
   }
 
-  /** regions track the number of tombstones their map holds for size calculations */
+  /**
+   * regions track the number of tombstones their map holds for size calculations
+   */
   public void incTombstoneCount(int delta) {
     this.tombstoneCount.addAndGet(delta);
     this.cachePerfStats.incTombstoneCount(delta);
@@ -3331,7 +3338,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     }
   }
 
-  /** local regions do not perform versioning */
+  /**
+   * local regions do not perform versioning
+   */
   protected boolean shouldGenerateVersionTag(RegionEntry entry, EntryEventImpl event) {
     if (this.getDataPolicy().withPersistence()) {
       return true;
@@ -3381,9 +3390,7 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    * returned. This method is intended for testing.testing purposes only.
    *
    * @throws EntryNotFoundException No entry with {@code key} exists
-   *
    * @see RegionMap#getEntry
-   *
    * @since GemFire 3.2
    */
   @Override
@@ -3452,9 +3459,7 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    *
    * @throws EntryNotFoundException No entry with {@code key} exists
    * @throws IllegalStateException If this region does not write to disk
-   *
    * @see RegionEntry#getValueOnDisk
-   *
    * @since GemFire 3.2
    */
   @Override
@@ -3486,9 +3491,7 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    *
    * @throws EntryNotFoundException No entry with {@code key} exists
    * @throws IllegalStateException If this region does not write to disk
-   *
    * @see RegionEntry#getValueOnDisk
-   *
    * @since GemFire 5.1
    */
   public Object getValueOnDiskOrBuffer(Object key) throws EntryNotFoundException {
@@ -4396,12 +4399,13 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
         clearViaFilterClass((String) key);
         break;
       case InterestType.KEY:
-        if (key instanceof String && key.equals("ALL_KEYS"))
+        if (key instanceof String && key.equals("ALL_KEYS")) {
           clearViaRegEx(".*");
-        else if (key instanceof List)
+        } else if (key instanceof List) {
           clearViaList((List) key);
-        else
+        } else {
           localDestroyNoCallbacks(key);
+        }
         break;
       case InterestType.OQL_QUERY:
         clearViaQuery((String) key);
@@ -4435,7 +4439,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     }
   }
 
-  /** must be holding destroy lock */
+  /**
+   * must be holding destroy lock
+   */
   void reinitializeFromImageTarget(InternalDistributedMember imageTarget)
       throws TimeoutException, IOException, ClassNotFoundException {
     Assert.assertTrue(imageTarget != null);
@@ -4450,7 +4456,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     return this.reinitialized_new;
   }
 
-  /** must be holding destroy lock */
+  /**
+   * must be holding destroy lock
+   */
   void reinitialize_destroy(RegionEventImpl event) throws CacheWriterException, TimeoutException {
     final boolean cacheWrite = !event.originRemote;
     // register this region as reinitializing
@@ -4458,7 +4466,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     basicDestroyRegion(event, cacheWrite, false/* lock */, true);
   }
 
-  /** must be holding destroy lock */
+  /**
+   * must be holding destroy lock
+   */
   private void recreate(InputStream inputStream, InternalDistributedMember imageTarget)
       throws TimeoutException, IOException, ClassNotFoundException {
     String thePath = getFullPath();
@@ -4682,7 +4692,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     return latch.getCount() == 0;
   }
 
-  /** wait on the initialization Latch based on thread requirements */
+  /**
+   * wait on the initialization Latch based on thread requirements
+   */
   @Override
   public void waitOnInitialization() {
     if (this.initialized) {
@@ -4736,7 +4748,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     waitOnInitialization(this.initializationLatchAfterGetInitialImage);
   }
 
-  /** return null if not found */
+  /**
+   * return null if not found
+   */
   @Override
   public RegionEntry basicGetEntry(Object key) {
     // ok to ignore tx state; all callers are non-transactional
@@ -4873,7 +4887,6 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    * than any other surviving members. So they shouldn't have any entries in their cache that match
    * entries that we failed to receive through the GII but are reflected in our current RVV. So it
    * should be safe to start with the current RVV.
-   *
    */
   void repairRVV() {
     RegionVersionVector rvv = this.getVersionVector();
@@ -5031,7 +5044,6 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    *
    * @param event the event object for this operation, with the exception that the oldValue
    *        parameter is not yet filled in. The oldValue will be filled in by this operation.
-   *
    * @param ifNew true if this operation must not overwrite an existing key
    * @param ifOld true if this operation must not create a new key
    * @param expectedOldValue only succeed if old value is equal to this value. If null, then doesn't
@@ -5570,7 +5582,6 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    *
    * @param event the event object for this operation, with the exception that the oldValue
    *        parameter is not yet filled in. The oldValue will be filled in by this operation.
-   *
    * @param ifNew true if this operation must not overwrite an existing key
    * @param ifOld true if this operation must not create a new entry
    * @param lastModified the lastModified time to set with the value; if 0L, then the lastModified
@@ -6019,7 +6030,6 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    *
    * @param task - a Runnable to wrap the processing of the bulk op
    * @param eventId - the base event ID of the bulk op
-   *
    * @since GemFire 5.7
    */
   public void syncBulkOp(Runnable task, EventID eventId) {
@@ -6298,9 +6308,8 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
   /**
    * Called after this region has been completely created
    *
-   * @since GemFire 5.0
-   *
    * @see DistributedRegion#postDestroyRegion(boolean, RegionEventImpl)
+   * @since GemFire 5.0
    */
   @Override
   public void postCreateRegion() {
@@ -6980,7 +6989,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     }
   }
 
-  /** @return true if initialization is complete */
+  /**
+   * @return true if initialization is complete
+   */
   @Override
   public boolean isInitialized() {
     if (this.initialized) {
@@ -7097,7 +7108,6 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    * to map entry, and key must be in map
    *
    * @param lastModified time, may be 0 in which case uses now instead
-   *
    * @return the actual lastModifiedTime used.
    */
   @Override
@@ -7202,7 +7212,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     }
   }
 
-  /** The listener is not closed until after the afterRegionDestroy event */
+  /**
+   * The listener is not closed until after the afterRegionDestroy event
+   */
   protected void closeCallbacksExceptListener() {
     closeCacheCallback(getCacheLoader());
     closeCacheCallback(getCacheWriter());
@@ -7212,7 +7224,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     }
   }
 
-  /** This is only done when the cache is closed. */
+  /**
+   * This is only done when the cache is closed.
+   */
   private void closeAllCallbacks() {
     closeCallbacksExceptListener();
     CacheListener[] listeners = fetchCacheListenersField();
@@ -7578,7 +7592,6 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    * the region have been set.
    *
    * @return {@code null} is a disk region is not desired
-   *
    * @since GemFire 3.2
    */
   protected DiskRegion createDiskRegion(InternalRegionArguments internalRegionArgs)
@@ -7863,8 +7876,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
         if (other.region != null) {
           return false;
         }
-      } else if (!this.region.equals(other.region))
+      } else if (!this.region.equals(other.region)) {
         return false;
+      }
       return true;
     }
 
@@ -8156,10 +8170,12 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
   private void cancelAllEntryExpiryTasks() {
     // This method gets called during LocalRegion construction
     // in which case the final entryExpiryTasks field can still be null
-    if (this.entryExpiryTasks == null)
+    if (this.entryExpiryTasks == null) {
       return;
-    if (this.entryExpiryTasks.isEmpty())
+    }
+    if (this.entryExpiryTasks.isEmpty()) {
       return;
+    }
     boolean doPurge = false;
     for (EntryExpiryTask task : this.entryExpiryTasks.values()) {
       // no need to call incCancels since we will call forcePurge
@@ -8227,7 +8243,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     getImageState().readUnlockRI();
   }
 
-  /** doesn't throw RegionDestroyedException, used by CacheDistributionAdvisor */
+  /**
+   * doesn't throw RegionDestroyedException, used by CacheDistributionAdvisor
+   */
   LocalRegion basicGetParentRegion() {
     return this.parentRegion;
   }
@@ -8403,7 +8421,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     this.entries.decTxRefCount(regionEntry);
   }
 
-  /** Does not throw RegionDestroyedException even if destroyed */
+  /**
+   * Does not throw RegionDestroyedException even if destroyed
+   */
   List debugGetSubregionNames() {
     List names = new ArrayList();
     names.addAll(this.subregions.keySet());
@@ -8508,7 +8528,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     }
   }
 
-  /** Set view of subregions */
+  /**
+   * Set view of subregions
+   */
   private class SubregionsSet extends AbstractSet {
     final boolean recursive;
 
@@ -8663,7 +8685,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
       this.key = regionEntry.getKey();
     }
 
-    /** Internal method for getting the underlying RegionEntry */
+    /**
+     * Internal method for getting the underlying RegionEntry
+     */
     public RegionEntry getRegionEntry() {
       RegionEntry regionEntry = LocalRegion.this.getRegionMap().getEntry(this.key);
       if (regionEntry == null) {
@@ -10310,7 +10334,6 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
   FilterProfile filterProfile;
 
   /**
-   *
    * @return int array containing the IDs of the oplogs which will potentially get rolled else null
    *         if no oplogs were available at the time of signal or region is not having disk
    *         persistence. Pls note that the actual number of oplogs rolled may be more than what is
@@ -10422,8 +10445,17 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     return this.cacheServiceProfiles.getSnapshot();
   }
 
-  public void addCacheServiceProfile(CacheServiceProfile profile) {
-    this.cacheServiceProfiles.put(profile.getId(), profile);
+  @Override
+  public void addCacheServiceProfile(CacheServiceProfile profile)
+      throws IncompatibleCacheServiceProfileException {
+    synchronized (this.cacheServiceProfiles) {
+      this.cacheServiceProfiles.putIfAbsent(profile.getId(), profile);
+      this.validateProfiles();
+    }
+  }
+
+  protected boolean validateProfiles() throws IncompatibleCacheServiceProfileException {
+    return true;
   }
 
   @Override
@@ -10433,42 +10465,38 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
         searcher);
   }
 
-  /** visitor over the CacheProfiles to check if the region has a CacheLoader */
+  /**
+   * visitor over the CacheProfiles to check if the region has a CacheLoader
+   */
   private static final DistributionAdvisor.ProfileVisitor<Void> netLoaderVisitor =
-      new DistributionAdvisor.ProfileVisitor<Void>() {
-        @Override
-        public boolean visit(DistributionAdvisor advisor, Profile profile, int profileIndex,
-            int numProfiles, Void aggregate) {
-          assert profile instanceof CacheProfile;
-          final CacheProfile prof = (CacheProfile) profile;
+      (advisor, profile, profileIndex, numProfiles, aggregate) -> {
+        assert profile instanceof CacheProfile;
+        final CacheProfile prof = (CacheProfile) profile;
 
-          // if region in cache is not yet initialized, exclude
-          if (prof.regionInitialized) { // fix for bug 41102
-            // cut the visit short if we find a CacheLoader
-            return !prof.hasCacheLoader;
-          }
-          // continue the visit
-          return true;
+        // if region in cache is not yet initialized, exclude
+        if (prof.regionInitialized) { // fix for bug 41102
+          // cut the visit short if we find a CacheLoader
+          return !prof.hasCacheLoader;
         }
+        // continue the visit
+        return true;
       };
 
-  /** visitor over the CacheProfiles to check if the region has a CacheWriter */
+  /**
+   * visitor over the CacheProfiles to check if the region has a CacheWriter
+   */
   private static final DistributionAdvisor.ProfileVisitor<Void> netWriterVisitor =
-      new DistributionAdvisor.ProfileVisitor<Void>() {
-        @Override
-        public boolean visit(DistributionAdvisor advisor, Profile profile, int profileIndex,
-            int numProfiles, Void aggregate) {
-          assert profile instanceof CacheProfile;
-          final CacheProfile prof = (CacheProfile) profile;
+      (advisor, profile, profileIndex, numProfiles, aggregate) -> {
+        assert profile instanceof CacheProfile;
+        final CacheProfile prof = (CacheProfile) profile;
 
-          // if region in cache is in recovery
-          if (!prof.inRecovery) {
-            // cut the visit short if we find a CacheWriter
-            return !prof.hasCacheWriter;
-          }
-          // continue the visit
-          return true;
+        // if region in cache is in recovery
+        if (!prof.inRecovery) {
+          // cut the visit short if we find a CacheWriter
+          return !prof.hasCacheWriter;
         }
+        // continue the visit
+        return true;
       };
 
   /**
@@ -11458,7 +11486,9 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
     }
   }
 
-  /** test hook - dump the backing map for this region */
+  /**
+   * test hook - dump the backing map for this region
+   */
   public void dumpBackingMap() {
     synchronized (this.entries) {
       if (this.entries instanceof AbstractRegionMap) {
@@ -11514,7 +11544,6 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    * @return previous value associated with specified key, or <tt>null</tt> if there was no mapping
    *         for key. A <tt>null</tt> return can also indicate that the entry in the region was
    *         previously in an invalidated state.
-   *
    * @throws ClassCastException if key does not satisfy the keyConstraint
    * @throws IllegalArgumentException if the key or value is not serializable and this is a
    *         distributed region
@@ -11990,14 +12019,10 @@ public class LocalRegion extends AbstractRegion implements LoaderHelperFactory,
    * @param indexName the name of the index
    * @param indexedExpression the index expression
    * @param fromClause the from clause.
-   *
    * @return The index map.
-   *
    * @throws IllegalStateException if this region is not using soplog persistence
-   *
    * @throws IllegalStateException if this index was previously persisted with a different
    *         expression or from clause.
-   *
    */
   public IndexMap getIndexMap(String indexName, String indexedExpression, String fromClause) {
     return new IndexMapImpl();

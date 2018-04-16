@@ -63,7 +63,7 @@ public class LuceneTestUtilities {
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_FIELDS =
       "Cannot create Lucene index index on region /region with fields [field1, field2] because another member defines the same index with fields [field1].";
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_FIELDS_2 =
-      "Cannot create Lucene index index on region /region with fields [field1] because another member defines the same index with fields [field1, field2].";
+      "Cannot create Lucene index  on region /region with fields [field1] because another member defines the same index with fields [field1, field2].";
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_ANALYZERS =
       "Cannot create Lucene index index on region /region with analyzer StandardAnalyzer on field field2 because another member defines the same index with analyzer KeywordAnalyzer on that field.";
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_ANALYZERS_1 =
@@ -73,20 +73,18 @@ public class LuceneTestUtilities {
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_ANALYZERS_3 =
       "Cannot create Lucene index index on region /region with analyzer KeywordAnalyzer on field field2 because another member defines the same index with analyzer StandardAnalyzer on that field.";
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_NAMES =
-      "Cannot create Lucene index index2 on region /region because it is not defined in another member.";
+      "Cannot create Lucene index2 on region /region because it is not defined in another member.";
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_INDEXES_1 =
       "Must create Lucene index index on region /region because it is defined in another member.";
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_INDEXES_2 =
-      "Cannot create Lucene index index2 on region /region because it is not defined in another member.";
+      "Cannot create Lucene index2 on region /region because it is not defined in another member.";
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_INDEXES_3 =
       "Cannot create Lucene index index on region /region because it is not defined in another member.";
   public static final String CANNOT_CREATE_LUCENE_INDEX_DIFFERENT_SERIALIZER =
       "Cannot create Lucene index index on region /region with serializer DummyLuceneSerializer because another member defines the same index with different serializer HeterogeneousLuceneSerializer.";
 
-  public static String Quarter1 = "Q1";
-  public static String Quarter2 = "Q2";
-  public static String Quarter3 = "Q3";
-  public static String Quarter4 = "Q4";
+  private static String Quarter1 = "Q1";
+  private static String Quarter2 = "Q2";
 
   public static void verifyResultOrder(Collection<EntryScore<String>> list,
       EntryScore<String>... expectedEntries) {

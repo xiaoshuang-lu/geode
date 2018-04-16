@@ -20,6 +20,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -48,7 +49,6 @@ import org.apache.geode.internal.logging.LogService;
  * This class is a bit misnamed. It really has more with pushing a DistributionAdvisee's profile out
  * to others and, optionally if <code>profileExchange</code>, fetching the profile of anyone who
  * excepts the pushed profile.
- *
  */
 public class UpdateAttributesProcessor {
   private static final Logger logger = LogService.getLogger();
@@ -64,7 +64,9 @@ public class UpdateAttributesProcessor {
   private boolean removeProfile = false;
   private ReplyProcessor21 processor;
 
-  /** Creates a new instance of UpdateAttributesProcessor */
+  /**
+   * Creates a new instance of UpdateAttributesProcessor
+   */
   public UpdateAttributesProcessor(DistributionAdvisee da) {
     this(da, false);
   }
@@ -115,6 +117,7 @@ public class UpdateAttributesProcessor {
     }
   }
 
+
   public void sendProfileUpdate(boolean exchangeProfiles) {
     DistributionManager mgr = this.advisee.getDistributionManager();
     DistributionAdvisor advisor = this.advisee.getDistributionAdvisor();
@@ -151,30 +154,29 @@ public class UpdateAttributesProcessor {
       return;
     }
 
-    ReplyProcessor21 processor = null;
-    // Scope scope = this.region.scope;
-
     // always require an ack to prevent misordering of messages
     InternalDistributedSystem system = this.advisee.getSystem();
-    processor = new UpdateAttributesReplyProcessor(system, recipients);
-    UpdateAttributesMessage message = getUpdateAttributesMessage(processor, recipients);
+    UpdateAttributesReplyProcessor replyProcessor =
+        new UpdateAttributesReplyProcessor(system, recipients);
+    UpdateAttributesMessage message = getUpdateAttributesMessage(replyProcessor);
     mgr.putOutgoing(message);
-    this.processor = processor;
+    this.processor = replyProcessor;
   }
 
-
-  UpdateAttributesMessage getUpdateAttributesMessage(ReplyProcessor21 processor, Set recipients) {
+  UpdateAttributesMessage getUpdateAttributesMessage(UpdateAttributesReplyProcessor processor) {
 
     UpdateAttributesMessage msg = new UpdateAttributesMessage();
     msg.adviseePath = this.advisee.getFullPath();
-    msg.setRecipients(recipients);
-    if (processor != null) {
-      msg.processorId = processor.getProcessorId();
-    }
+    msg.setRecipients(processor.getRecipients());
+    msg.processorId = processor.getProcessorId();
     msg.profile = this.advisee.getProfile();
     msg.exchangeProfiles = this.profileExchange;
     msg.removeProfile = this.removeProfile;
     return msg;
+  }
+
+  public void validateProfiles() {
+
   }
 
   class UpdateAttributesReplyProcessor extends ReplyProcessor21 {
@@ -236,12 +238,9 @@ public class UpdateAttributesProcessor {
         if (msg instanceof ProfilesReplyMessage) {
           ProfilesReplyMessage reply = (ProfilesReplyMessage) msg;
           if (reply.profiles != null) {
-            for (int i = 0; i < reply.profiles.length; i++) {
-              // @todo Add putProfiles to DistributionAdvisor to do this
-              // with one call atomically?
-              UpdateAttributesProcessor.this.advisee.getDistributionAdvisor()
-                  .putProfile(reply.profiles[i]);
-            }
+            Arrays.stream(reply.profiles)
+                .forEach((profile) -> UpdateAttributesProcessor.this.advisee
+                    .getDistributionAdvisor().putProfile(profile));
           }
         } else if (msg instanceof ProfileReplyMessage) {
           ProfileReplyMessage reply = (ProfileReplyMessage) msg;
@@ -253,6 +252,10 @@ public class UpdateAttributesProcessor {
       } finally {
         super.process(msg);
       }
+    }
+
+    public Collection getRecipients() {
+      return Arrays.asList(members);
     }
   }
 
@@ -439,6 +442,7 @@ public class UpdateAttributesProcessor {
     }
 
   }
+
   /**
    * Used to return multiple profiles
    *
@@ -465,12 +469,10 @@ public class UpdateAttributesProcessor {
     }
 
 
-
     @Override
     public int getDSFID() {
       return PROFILES_REPLY_MESSAGE;
     }
-
 
 
     @Override

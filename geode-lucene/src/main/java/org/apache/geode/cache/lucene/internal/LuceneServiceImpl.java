@@ -69,6 +69,7 @@ import org.apache.geode.internal.DataSerializableFixedID;
 import org.apache.geode.internal.cache.BucketNotFoundException;
 import org.apache.geode.internal.cache.BucketRegion;
 import org.apache.geode.internal.cache.CacheService;
+import org.apache.geode.internal.cache.IncompatibleCacheServiceProfileException;
 import org.apache.geode.internal.cache.InternalCache;
 import org.apache.geode.internal.cache.PartitionedRegion;
 import org.apache.geode.internal.cache.PrimaryBucketException;
@@ -221,8 +222,12 @@ public class LuceneServiceImpl implements InternalLuceneService {
       LuceneSerializer serializer) {
     validateRegionAttributes(region.getAttributes());
 
-    region.addCacheServiceProfile(new LuceneIndexCreationProfile(indexName, regionPath, fields,
-        analyzer, fieldAnalyzers, serializer));
+    try {
+      region.addCacheServiceProfile(new LuceneIndexCreationProfile(indexName, regionPath, fields,
+          analyzer, fieldAnalyzers, serializer));
+    } catch (IncompatibleCacheServiceProfileException e) {
+      e.printStackTrace();
+    }
 
     String aeqId = LuceneServiceImpl.getUniqueIndexName(indexName, regionPath);
     region.updatePRConfigWithNewGatewaySender(aeqId);

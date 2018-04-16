@@ -142,7 +142,8 @@ public interface InternalRegion extends Region, HasCachePerfStats, RegionEntryCo
       InternalRegionArguments internalRegionArgs)
       throws RegionExistsException, TimeoutException, IOException, ClassNotFoundException;
 
-  void addCacheServiceProfile(CacheServiceProfile profile);
+  void addCacheServiceProfile(CacheServiceProfile profile)
+      throws IncompatibleCacheServiceProfileException;
 
   void setEvictionMaximum(int maximum);
 
